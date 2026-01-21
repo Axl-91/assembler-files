@@ -22,4 +22,4 @@ conversion.com
 ```
 ## For MLC files
 
-The best to try them is using [z390 emulator](https://z390.org/)
+The best way to try them is using [z390 emulator](https://z390.org/)
