@@ -1,0 +1,642 @@
+FRACC    SUBENTRY BASES=(3)
+MENU     WTO   'BIENVENIDO AL SISTEMA DE FRACCIONES'
+         WTO   '1)SUMA DE N FRACCIONES (MAX 10)'
+         WTO   '2)ORDENAR N FRACCIONES (MAX 10)'
+         WTO   '3)EXPRECION DECIMAL DE FRACCION'
+         WTO   '4)NUMERO PERIODICO A FRACCION'
+         WTO   '5)FINALIZAR PROGRAMA'
+         WTOR  'INGRESE LA OPCION QUE DESEA REALIZAR: ',OPC,,WAITECB
+         WAIT  ECB=WAITECB
+         BAL   9,VALOPC
+         CLI   OPCVAL,C'S'
+         BNE   OPCINV
+         CLI   OPC,C'1'
+         BE    SUMA
+         CLI   OPC,C'2'
+         BE    ORDEN
+         CLI   OPC,C'3'
+         BE    ADECIM
+         CLI   OPC,C'4'
+         BE    PERIOD
+         B     FINPROG
+
+SUMA     WTO   'INGRESE LAS N FRACCIONES QUE DESEE QUE SEAN SUMADAS'
+         WTO   'LA SUMA TERMINARA CUANDO INGRESE EL CARACTER *'
+         WTO   'DEBE INGRESAR EL SIGNO COMO PRIMER CARACTER EJ:+2/3'
+         L     8,CANT_N
+         MVI   FINING,C'N'
+         ZAP   RESNUM,=P'0'
+         ZAP   RESDEN,=P'0'
+ING_SUM  BAL   9,INGRESO
+         CLI   FINING,C'S'
+         BE    MOS_SUM
+         CLI   NUMINV,C'S'
+         BE    NUMERROR
+         BAL   9,SUM_FRA
+         BCT   8,ING_SUM
+MOS_SUM  WTO   'EL RESULTADO DE LA SUMA ES:'
+         BAL   9,RES_FRAC
+         B     MENU
+
+ORDEN    WTO   'INGRESE LAS N FRACCIONES QUE DESEE QUE SEAN ORDENADAS'
+         WTO   'EL ORDENAMIENTO FINALIZA CUANDO INGRESE EL CARACTER *'
+         WTO   'DEBE INGRESAR EL SIGNO COMO PRIMER CARACTER EJ:+2/3'
+         L     8,CANT_N
+         MVI   FINING,C'N'
+         BAL   9,INIC_VEC
+ING_ORD  BAL   9,INGRESO
+         CLI   FINING,C'S'
+         BE    MOST_ORD
+         CLI   NUMINV,C'S'
+         BE    NUMERROR
+         BAL   9,ORDENAR
+         BCT   8,ING_ORD
+MOST_ORD BAL   10,RES_ORD
+         B     MENU
+
+ADECIM   WTO   'LA FRACCION QUE INGRESE SERA PASADA A DECIMAL'
+         WTO   'DEBE INGRESAR EL SIGNO COMO PRIMERO CARACTER EJ:+2/3'
+         BAL   9,INGRESO
+         CLI   NUMINV,C'S'
+         BE    NUMERROR
+         BAL   9,ADECIMAL
+         WTO   'LA EXPRECION DECIMAL ES:'
+         WTO   MF=(E,WTBLKD)
+         WTO   '-------------------------'
+         B     MENU
+
+PERIOD   WTO   'INGRESE EL NUMERO PERIODICO QUE DESEA PASAR A FRACCION'
+         WTO   'LOS NUMEROS PERIODICOS DEBEN IR ENTRE PARENTESIS'
+         WTO   'HAY UN MAX DE 4 NUMEROS ANTES Y DESPUES DE LA COMA'
+         WTO   'EL SIGNO DEBE SER EL PRIMER CARACTER EJ:+1234,1(234)'
+         MVI   NUMINV,C'N'
+         BAL   9,ING_PER
+         CLI   NUMINV,C'S'
+         BE    NUMERROR
+         BAL   9,AFRAC
+         WTO   'EL RESULTADO DE PASAR A FRACCION ES:'
+         BAL   9,RES_FRAC
+         B     MENU
+
+OPCINV   WTO   'OPCION INVALIDA'
+         WTO   '---------------'
+         B     MENU
+
+NUMERROR WTO   'NUMERO INVALIDO'
+         WTO   '---------------'
+         B     MENU
+
+FINPROG  WTO   'FIN DEL PROGRAMA'
+
+         SUBEXIT
+
+****************************
+*VALIDO LA OPCION INGRESADA*
+****************************
+VALOPC   MVI   OPCVAL,C'S'
+         CLI   OPC,C'1'
+         BL    OP_INC
+         CLI   OPC,C'5'
+         BH    OP_INC
+         BR    9
+OP_INC   MVI   OPCVAL,C'N'
+         BR    9
+
+*********************
+*INGRESO DE FRACCION*
+*********************
+INGRESO  WTOR  'INGRESE UNA FRACCION:',FRAC,,WAITECB
+         WAIT  ECB=WAITECB
+         CLI   FRAC,C'*'
+         BE    FIN_SUMA
+         MVI   NUMINV,C'N'
+         BAL   10,PUNTDEN
+         LA    7,FRAC
+         BAL   10,GETSIGN
+         BAL   10,GETNUM
+         BAL   10,GETDEN
+         BR    9
+FIN_SUMA MVI   FINING,C'S'
+         BR    9
+
+************************************
+*ALMACENO UN PUNTERO AL DENOMINADOR*
+************************************
+PUNTDEN  LA    5,FRAC
+OTROPUNT CLC   0(1,5),=C'/'
+         BE    FINPUN
+         LA    5,1(5)
+         B     OTROPUNT
+FINPUN   LA    5,1(5)
+         BR    10
+
+**********************************
+*ALMACENO EL SIGNO DE LA FRACCION*
+**********************************
+GETSIGN  CLC   0(1,7),=C'-'
+         BE    NEG
+         CLC   0(1,7),=C'+'
+         BE    POS
+         MVI   NUMINV,C'S'
+         BR    10
+NEG      MVI   SIGN,C'N'
+         LA    7,1(7)
+         BR    10
+POS      MVI   SIGN,C'P'
+         LA    7,1(7)
+         BR    10
+
+***********************
+*ALMACENO EL NUMERADOR*
+***********************
+GETNUM   BAL   11,LONGNUM
+         C     6,=F'1'
+         BE    LONG_N1
+         C     6,=F'2'
+         BE    LONG_N2
+         C     6,=F'3'
+         BE    LONG_N3
+         C     6,=F'4'
+         BE    LONG_N4
+         MVI   NUMINV,C'S'
+         B     FINNUM
+LONG_N1  PACK  NUM,FRAC+1(1)
+         CP    NUM,=P'0'
+         BE    NUMNULO
+         B     FINNUM
+LONG_N2  PACK  NUM,FRAC+1(2)
+         CP    NUM,=P'0'
+         BE    NUMNULO
+         B     FINNUM
+LONG_N3  PACK  NUM,FRAC+1(3)
+         CP    NUM,=P'0'
+         BE    NUMNULO
+         B     FINNUM
+LONG_N4  PACK  NUM,FRAC+1(4)
+         CP    NUM,=P'0'
+         BE    NUMNULO
+         B     FINNUM
+NUMNULO  MVI   NUMINV,C'S'  
+FINNUM   BR    10
+
+LONGNUM  LA    6,0
+OTRONUM  CLC   0(1,7),=C'/'
+         BE    EXITNUM 
+         LA    7,1(7)
+         LA    6,1(6)
+         C     6,=F'4'
+         BH    EXITNUM
+         B     OTRONUM
+EXITNUM  LA    7,1(7)
+         BR    11
+
+*************************
+*ALMACENO EL DENOMINADOR*
+*************************
+GETDEN   BAL   11,LONGDEN
+         C     6,=F'1'
+         BE    LONG_D1
+         C     6,=F'2'
+         BE    LONG_D2
+         C     6,=F'3'
+         BE    LONG_D3
+         C     6,=F'4'
+         BE    LONG_D4
+         MVI   NUMINV,C'S'
+         B     FINDEN
+LONG_D1  PACK  DEN,0(1,5)
+         CP    DEN,=P'0'
+         BE    DENNULO
+         B     FINDEN
+LONG_D2  PACK  DEN,0(2,5)
+         CP    DEN,=P'0'
+         BE    DENNULO
+         B     FINDEN
+LONG_D3  PACK  DEN,0(3,5)
+         CP    DEN,=P'0'
+         BE    DENNULO
+         B     FINDEN
+LONG_D4  PACK  DEN,0(4,5)
+         CP    DEN,=P'0'
+         BE    DENNULO
+         B     FINDEN
+DENNULO MVI   NUMINV,C'S'
+FINDEN   BR    10
+
+LONGDEN  LA    6,0
+OTRODEN  CLC   0(1,7),=X'40'
+         BE    EXITDEN
+         LA    7,1(7)
+         LA    6,1(6)
+         C     6,=F'4'
+         BH    EXITDEN
+         B     OTRODEN
+EXITDEN  BR    11
+
+****************************
+*SUMA PARCIAL DE FRACCIONES*
+****************************
+SUM_FRA  CP    RESNUM,=P'0' *SI EL NUMERADOR DE LA SUMA ES 0
+         BNE   NOVACIO      *EL DENOMINADOR TOMA EL VALOR DE 1
+         ZAP   RESDEN,=P'1'   
+
+NOVACIO  ZAP   NUM2,RESNUM
+         ZAP   DEN2,RESDEN
+         MP    RESDEN,DEN
+         MP    RESNUM,=P'0'
+
+         CLI   SIGN,C'P'
+         BE    SEGUIR
+         MP    NUM,=P'-1'
+
+SEGUIR   ZAP   AUXSUM,RESDEN
+         DP    AUXSUM,DEN
+         MP    AUXSUM(5),NUM
+         AP    RESNUM,AUXSUM(5)
+
+         ZAP   AUXSUM,RESDEN
+         DP    AUXSUM,DEN2
+         MP    AUXSUM(5),NUM2
+         AP    RESNUM,AUXSUM(5)
+
+         CP    RESNUM,=P'0'
+         BE    VACIO
+
+         BAL   10,MCD    *BUSCO MCD PARA LUEGO SIMPLIFICAR
+
+         ZAP   AUXSUM,RESNUM
+         DP    AUXSUM,R_MCD
+         ZAP   RESNUM,AUXSUM(5)
+
+         ZAP   AUXSUM,RESDEN
+         DP    AUXSUM,R_MCD
+         ZAP   RESDEN,AUXSUM(5)
+
+         BR    9
+
+VACIO    ZAP   RESDEN,=P'0'
+         BR    9
+
+***********************
+*MCD ENTRE DOS NUMEROS*
+***********************
+MCD      CP    RESNUM,RESDEN
+         BL    INVERT
+         ZAP   DIVIS,RESNUM
+         ZAP   DIVID,RESDEN
+
+         CP    DIVIS,=P'0'
+         BL    DVS_SGN
+
+         B     DIVMCD
+INVERT   ZAP   DIVIS,RESDEN
+         ZAP   DIVID,RESNUM
+
+         CP    DIVID,=P'0'
+         BL    DVD_SGN
+
+DIVMCD   DP    DIVIS,DIVID
+         CP    DIVIS+5(5),=P'0'
+         BE    RETURN
+         ZAP   AUX,DIVID
+         ZAP   DIVID,DIVIS+5(5)
+         ZAP   DIVIS,AUX
+         B     DIVMCD
+RETURN   ZAP   R_MCD,DIVID
+         BR    10
+
+DVS_SGN  MP    DIVIS,=P'-1'
+         B     DIVMCD
+DVD_SGN  MP    DIVID,=P'-1'
+         B     DIVMCD
+
+********************************
+*DEVOLVER RESULTADO EN FRACCION*
+********************************
+RES_FRAC UNPK  NUMZON,RESNUM
+         MVZ   NUMZON+8(1),=X'FF'
+         UNPK  DENZON,RESDEN
+         MVZ   DENZON+8(1),=X'FF'
+         CP    RESNUM,=P'0'
+         BL    SIG_NEG
+         MVI   SUMARES,C'+'
+         B     COP_NUM
+SIG_NEG  MVI   SUMARES,C'-'
+COP_NUM  MVC   SUMARES+1(9),NUMZON
+         MVI   SUMARES+10,C'/'
+         MVC   SUMARES+11(9),DENZON
+         WTO   MF=(E,WTBLKR)
+         WTO   '--------------------------'
+         BR    9
+
+************************************
+*INICIALIZAR VECTOR DE ORDENAMIENTO*
+************************************
+INIC_VEC L     6,=F'20'
+         LA    5,VECTOR
+INIC     MVC   0(5,5),=P'000000000'
+         LA    5,5(5)
+         BCT   6,INIC
+         BR    9 
+
+****************************
+*ORDENAMIENTO DE FRACCIONES*
+****************************
+ORDENAR  CLI   SIGN,C'P'
+         BE    INI_ORD
+         MP    NUM,=P'-1'
+         MP    DEN,=P'-1'
+
+INI_ORD  LA    5,VECTOR
+
+COMP_NUM ZAP   NUM2,0(5,5)
+         ZAP   DEN2,5(5,5)
+
+         CP    NUM2,=P'0'
+         BE    NULO
+
+         BAL   10,COMPARAR *COMPARO FRACCION DADA CON LA DEL VECTOR
+         CLI   ES_MAY,C'N'
+         BE    PROX
+
+         MVC   0(5,5),NUM
+         MVC   5(5,5),DEN
+         ZAP   NUM,NUM2
+         ZAP   DEN,DEN2
+         B     INI_ORD
+
+NULO     MVC   0(5,5),NUM
+         MVC   5(5,5),DEN
+         B     FIN_ORD
+
+PROX     LA    5,10(5)
+         B     COMP_NUM
+
+FIN_ORD  BR    9
+
+**********************************
+*COMPARACION ENTRE DOS FRACCIONES*
+**********************************
+COMPARAR MVI   ES_MAY,C'N'
+
+         ZAP   RESDEN,DEN
+         MP    RESDEN,DEN2
+
+         ZAP   AUXSUM,RESDEN
+         DP    AUXSUM,DEN
+         MP    AUXSUM(5),NUM
+         ZAP   AUXCOMP,AUXSUM(5)
+
+         ZAP   AUXSUM,RESDEN
+         DP    AUXSUM,DEN2
+         MP    AUXSUM(5),NUM2
+
+         CP    NUM,=P'0'
+         BL    NUM1_NEG
+
+         CP    NUM2,=P'0'
+         BL    NUM2_NEG
+
+POSIT    CP    AUXCOMP,AUXSUM(5)
+         BH    MAYOR
+         BR    10
+
+NEGAT    CP    AUXCOMP,AUXSUM(5)
+         BL    MAYOR
+         BR    10
+
+MAYOR    MVI   ES_MAY,C'S'
+         BR    10
+
+NUM1_NEG CP    NUM2,=P'0'
+         BL    NEGAT
+         BR    10
+
+NUM2_NEG CP    NUM,=P'0'
+         BH    MAYOR
+         B     NEGAT
+
+************************************
+*MOSTRAR RESULTADO DEL ORDENAMIENTO*
+************************************
+RES_ORD  L     6,=F'10'
+         LA    5,VECTOR
+
+         WTO   'LAS FRACCIONES EN ORDEN SON:'
+
+MOS_ORD  CP    0(5,5),=P'0'
+         BE    FINMOST
+         
+         ZAP   RESNUM,0(5,5)
+         ZAP   RESDEN,5(5,5)
+
+         BAL   9,RES_FRAC
+
+         LA    5,10(5)
+         BCT   6,MOS_ORD
+
+         BR    10
+
+FINMOST  C     6,=F'10'
+         BE    VEC_NULL
+         BR    10
+
+VEC_NULL WTO   'NO SE INGRESARON FRACCIONES'
+         WTO   '---------------------------'
+         BR    10
+
+*****************************
+*PASO FRACCION A NUM DECIMAL*
+*****************************
+ADECIMAL LA    8,DECRES+6
+         L     11,=F'5'
+         ZAP   AUXSUM,NUM
+         DP    AUXSUM,DEN
+         UNPK  NUMZON,AUXSUM(5)
+         MVZ   NUMZON+8(1),=X'FF'
+         MVC   DECRES(5),NUMZON+4
+         MVI   DECRES+5,C','
+NEXT     ZAP   AUXDEC,AUXSUM+5(5)
+         ZAP   AUXSUM,AUXDEC
+         MP    AUXSUM,=P'10'
+         DP    AUXSUM,DEN
+         UNPK  NUMZON,AUXSUM(5)
+         MVZ   NUMZON+8(1),=X'FF'
+         MVC   0(1,8),NUMZON+8
+         LA    8,1(8)
+         BCT   11,NEXT
+         CLI   SIGN,C'P'
+         BE    POS_DEC
+         MVI   DECRES,C'-'
+         BR    9
+POS_DEC  MVI   DECRES,C'+'
+         BR    9
+
+*******************************
+*INGRESO NUM DECIMAL PERIODICO*
+*******************************
+ING_PER  WTOR  'INGRESE EL NUMERO DECIMAL PERIODICO: ',NUM_PER,,WAITECB
+         WAIT  ECB=WAITECB
+
+         MVI   ES_PER,C'N'
+         MVI   ES_DC,C'N'
+         ZAP   CANT_P,=P'0'
+         ZAP   CANT_NP,=P'0'
+
+         L     5,=F'11'
+         LA    6,NUM_PER+11
+         LA    7,NUM_ENT+7
+         LA    8,NUM_SP+7
+
+         MVC   NUM_ENT,=C'00000000'
+         MVC   NUM_SP,=C'00000000'
+
+         CLI   NUM_PER,C'-'
+         BE    NUEVO
+         CLI   NUM_PER,C'+'
+         BE    NUEVO
+
+         B     INVDEC
+
+NUEVO    CLC   0(1,6),=X'40'
+         BE    AVANZO
+         CLC   0(1,6),=C','
+         BE    FINCOMA
+         CLC   0(1,6),=C')'
+         BE    INIPER
+         CLC   0(1,6),=C'('
+         BE    FINPER
+         CLI   ES_PER,C'S'
+         BE    PER
+
+         MVC   0(1,8),0(6)
+         S     8,=F'1'
+         CLI   ES_DC,C'S'
+         BE    DES_COMA
+
+CONT     MVC   0(1,7),0(6)
+         S     7,=F'1'
+AVANZO   S     6,=F'1'
+         BCT   5,NUEVO
+
+         CP    CANT_P,=P'0'
+         BE    INVDEC
+         CLI   ES_PER,C'S'
+         BE    INVDEC
+
+         BR    9
+
+PER      AP    CANT_P,=P'1'
+         B     CONT
+
+INIPER   MVI   ES_PER,C'S'
+         B     AVANZO
+
+FINPER   MVI   ES_PER,C'N'
+         MVI   ES_DC,C'S'
+         B     AVANZO
+
+DES_COMA AP    CANT_NP,=P'1'
+         B     CONT
+
+FINCOMA  MVI   ES_DC,C'N'
+         B     AVANZO
+
+INVDEC   MVI   NUMINV,C'S'
+         BR    9
+
+*****************************
+*PASAR DE DECIMAL A FRACCION*
+*****************************
+AFRAC    ZAP   RESNUM,=P'0'
+         ZAP   RESDEN,=P'0'
+         MVC   DENZON,=C'000000000'
+         LA    5,DENZON+8
+
+         PACK  NUM,NUM_ENT
+         PACK  NUM2,NUM_SP
+         AP    RESNUM,NUM
+         SP    RESNUM,NUM2
+
+         CLI   NUM_PER,C'-'
+         BE    NEG_NUM
+
+NO_PER   CP    CANT_NP,=P'0'
+         BE    SI_PER
+         S     5,=F'1'
+         SP    CANT_NP,=P'1'
+         B     NO_PER
+
+SI_PER   CP    CANT_P,=P'0'
+         BE    CARG_DEN
+         MVC   0(1,5),=C'9'
+         S     5,=F'1'
+         SP    CANT_P,=P'1'
+         B     SI_PER
+
+CARG_DEN PACK  DEN,DENZON
+         AP    RESDEN,DEN
+
+         CP    RESNUM,=P'0'
+         BE    FRACVAC
+
+         BAL   10,MCD    *BUSCO MCD PARA LUEGO SIMPLIFICAR
+
+         ZAP   AUXSUM,RESNUM
+         DP    AUXSUM,R_MCD
+         ZAP   RESNUM,AUXSUM(5)
+
+         ZAP   AUXSUM,RESDEN
+         DP    AUXSUM,R_MCD
+         ZAP   RESDEN,AUXSUM(5)
+
+         BR    9
+
+NEG_NUM  MP    RESNUM,=P'-1'
+         B     NO_PER
+FRACVAC  ZAP   RESDEN,=P'0'
+         BR    9
+
+***********************************************************
+***********************************************************
+FRAC     DS    CL11
+WAITECB  DC    F'0'
+FINING   DS    C    
+NUM      DS    PL5
+DEN      DS    PL5
+NUM2     DS    PL5
+DEN2     DS    PL5
+AUXSUM   DS    PL10
+AUXDEC   DS    PL3
+RESNUM   DS    PL5
+RESDEN   DS    PL5
+OPC      DS    C
+OPCVAL   DS    C
+NUMINV   DS    C
+SIGN     DS    C
+CANT_N   DC    F'10'
+NUMZON   DS    CL9
+DENZON   DS    CL9
+WTBLKR   DC    H'24'
+         DC    H'0'
+SUMARES  DS    CL20
+DIVID    DS    PL5
+DIVIS    DS    PL10
+AUX      DS    PL10
+R_MCD    DS    PL5
+WTBLKD   DC    H'15'
+         DC    H'0'
+DECRES   DS    CL11
+NUM_PER  DS    CL12
+EMP_PER  DS    P
+NUM_ENT  DS    CL8
+NUM_SP   DS    CL8
+CANT_P   DS    P
+CANT_NP  DS    P
+ES_PER   DS    C
+ES_DC    DS    C
+AUXVEC   DS    PL5
+VECTOR   DS    20PL5
+ES_MAY   DS    C
+AUXCOMP  DS    PL5
+         END

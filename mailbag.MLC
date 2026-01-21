@@ -1,0 +1,277 @@
+CORREO   SUBENTRY BASES=(3)
+MENU     WTO   'BIENVENIDO AL SISTEMA DE BOLSAS DE CORREO'
+         WTOR  'INGRESE LA CANTIDAD DE OBJETOS(MAX 20): ',CANT,,WAITECB
+         WAIT  ECB=WAITECB
+         BAL   9,VALDIG
+         CLI   VAL,C'N'
+         BE    CANTINV
+         BAL   9,VALNUM
+         CLI   VAL,C'N'
+         BE    CANTINV
+         ZAP   CONT,N_CANT
+
+         LA    4,MARDEL
+         LA    5,BARILO
+         LA    6,POSADAS
+         LA    7,SALTA
+
+         WTO   'INGRESE LOS DETALLES DE CADA OBJETO'
+ING_DES  WTO   'LOS DESTINOS DISPONIBLES SON:'
+         WTO   '1) MAR DEL PLATA'
+         WTO   '2) BARILOCHE'
+         WTO   '3) POSADAS'
+         WTO   '4) SALTA'
+         WTOR  'SELECCIONE EL NUMERO DE DESTINO: ',DEST,,WAITECB
+         WAIT  ECB=WAITECB
+         BAL   9,VALDES
+         CLI   VAL,C'N'
+         BE    DESTINV
+
+ING_PES  WTOR  'INGRESE EL PESO DEL OBJETO: ',PESO,,WAITECB
+         WAIT  ECB=WAITECB
+         BAL   9,VALPES
+         CLI   VAL,C'N'
+         BE    PESINV
+         BAL   9,REG_PES
+
+         WTO   '------------------------------'
+         WTO   'OBJETO REGISTRADO EXITOSAMENTE'
+         WTO   '------------------------------'
+
+         SP    CONT,=P'1'
+         CP    CONT,=P'0'
+         BNE   ING_DES
+
+         B     MOST_RES
+
+CANTINV  WTO   '---------------------------------'
+         WTO   'LA CANTIDAD DE OBJETOS INGRESADA ES INVALIDA'
+         WTO   '---------------------------------'
+         B     MENU
+
+DESTINV  WTO   '---------------------------------'
+         WTO   'EL DESTINO INGRESADO ES INCORRECTO'
+         WTO   '---------------------------------'
+         B     ING_DES
+
+PESINV   WTO   '-------------------------------'
+         WTO   'EL PESO INGRESADO ES INCORRECTO'
+         WTO   '-------------------------------'
+         B     ING_PES
+
+MOST_RES WTO   'ORDENAMIENTO DE OBJETOS'
+         WTO   '-----------------------'
+
+         WTO   'PAQUETES HACIA MAR DEL PLATA: '
+         ZAP   CANT_PQ,PQ_MAR
+         LA    4,MARDEL
+         BAL   9,RES_BLS
+
+         WTO   '------------------------'
+         WTO   'PAQUETES HACIA BARILOCHE: '
+         ZAP   CANT_PQ,PQ_BAR
+         LA    4,BARILO
+         BAL   9,RES_BLS
+
+         WTO   '----------------------'
+         WTO   'PAQUETES HACIA POSADAS: '
+         ZAP   CANT_PQ,PQ_POS
+         LA    4,POSADAS
+         BAL   9,RES_BLS
+
+         WTO   '--------------------'
+         WTO   'PAQUETES HACIA SALTA: '
+         ZAP   CANT_PQ,PQ_SAL
+         LA    4,SALTA
+         BAL   9,RES_BLS
+
+         WTO   '-----------------'
+         WTO   'FIN DEL PROGRAMA'
+
+         SUBEXIT
+
+************************************
+*VALIDAR QUE SE TENGA 1 O 2 DIGITOS*
+************************************
+VALDIG   LA    5,CANT
+         LA    6,0
+         MVI   VAL,C'S'
+OTRODIG  CLC   0(1,5),=X'40'
+         BE    FINDIG
+         LA    5,1(5)
+         LA    6,1(6)
+         C     6,=F'2'
+         BH    DIG_INV
+         B     OTRODIG
+DIG_INV  MVI   VAL,C'N'
+FINDIG   BR    9
+
+**************************************
+*VALIDAR QUE EL NUMERO SEA MENOR A 20*
+**************************************
+VALNUM   C     6,=F'2'
+         BE    LONG2
+LONG1    PACK  N_CANT,CANT(1)
+         B     COMP
+LONG2    PACK  N_CANT,CANT(2)
+COMP     CP    N_CANT,=P'0'
+         BE    NUM_INC
+         CP    N_CANT,=P'20'
+         BH    NUM_INC
+         B     FIN_VAL
+NUM_INC  MVI   VAL,C'N'
+FIN_VAL  BR    9
+
+*****************************************
+*VALIDAR QUE EL DESTINO ESTE ENTRE 1 Y 4*
+*****************************************
+VALDES   MVI   VAL,C'S'
+         CLI   DEST,C'1'
+         BL    DES_INV
+         CLI   DEST,C'4'
+         BH    DES_INV
+         B     FIN_DES
+DES_INV  MVI   VAL,C'N'
+FIN_DES  BR    9
+
+**************************************
+*VALIDAR QUE EL PESO ESTE ENTRE 1 Y 8*
+**************************************
+VALPES   MVI   VAL,C'S'
+         CLI   PESO,C'1'
+         BL    PES_INV
+         CLI   PESO,C'8'
+         BH    PES_INV
+         B     FIN_PES
+PES_INV  MVI   VAL,C'N'
+FIN_PES  BR    9 
+
+*****************************************
+*GUARDO EL PESO EN EL VECTOR DEL DESTINO*
+*****************************************
+REG_PES  PACK  AUXP,PESO(1)
+
+         CLI   DEST,C'1'
+         BE    REG_MAR
+         CLI   DEST,C'2'
+         BE    REG_BAR
+         CLI   DEST,C'3'
+         BE    REG_POS
+         MVC   0(1,7),AUXP
+         AP    PQ_SAL,=P'1'
+         LA    7,1(7)
+         B     FIN_REG
+REG_MAR  MVC   0(1,4),AUXP
+         AP    PQ_MAR,=P'1'
+         LA    4,1(4)
+         B     FIN_REG
+REG_BAR  MVC   0(1,5),AUXP
+         AP    PQ_BAR,=P'1'
+         LA    5,1(5)
+         B     FIN_REG
+REG_POS  MVC   0(1,6),AUXP
+         AP    PQ_POS,=P'1'
+         LA    6,1(6)
+FIN_REG  BR    9
+
+***************************************
+*CREAR BOLSAS DE PAQUETES Y MOSTRARLAS*
+***************************************
+RES_BLS  ZAP   PAQUETES,CANT_PQ
+OTRA_BLS MVC   RES(17),VACIO
+         LA    5,RES
+         ZAP   LIMITE,=P'8'
+         MVI   0(5),C'('
+         LA    5,1(5)
+
+OTRO_PQ  CP    PAQUETES,=P'0'
+         BE    ULT_BLS
+
+         CP    LIMITE,=P'0'
+         BE    FIN_BLS
+
+         ZAP   REC_MAX,CANT_PQ
+         LA    7,0(4)
+         BAL   8,MAXIMO
+
+         CP    RES_MAX,=P'0'
+         BE    FIN_BLS
+
+         SP    PAQUETES,=P'1'
+         SP    LIMITE,RES_MAX
+
+         UNPK  MAX_CH,RES_MAX
+         MVZ   MAX_CH,=X'FF'
+
+         MVC   0(1,5),MAX_CH
+         LA    5,1(5)
+
+         CP    LIMITE,=P'0'
+         BE    CONTINUE
+         CP    PAQUETES,=P'0'
+         BNE   BARRA
+
+CONTINUE B     OTRO_PQ
+
+FIN_BLS  MVI   0(5),C')' 
+         WTO   MF=(E,WTBLKR)  
+         B     OTRA_BLS
+
+ULT_BLS  MVI   0(5),C')' 
+         WTO   MF=(E,WTBLKR)
+         BR    9
+
+BARRA    MVI   0(5),C'/'
+         LA    5,1(5)
+         B     OTRO_PQ
+
+**************************
+*BUSCAR MAXIMO Y QUITARLO*
+**************************
+MAXIMO   ZAP   RES_MAX,=P'0'
+
+OTRO     CP    REC_MAX,=P'0'
+         BE    FIN_MAX
+
+         CP    RES_MAX(1),0(1,7)
+         BH    SIGO
+         CP    LIMITE(1),0(1,7)
+         BL    SIGO
+
+         MVC   RES_MAX(1),0(7)
+         LA    6,0(7)
+
+SIGO     LA    7,1(7)
+         SP    REC_MAX,=P'1'
+         B     OTRO
+FIN_MAX  MVC   0(1,6),=P'0'
+         BR    8
+
+****************************************
+WAITECB  DC    F'0'
+CANT     DS    CL3
+VAL      DS    C
+N_CANT   DS    PL2
+CONT     DS    PL2
+DEST     DS    C
+PESO     DS    C
+AUXP     DS    P
+MARDEL   DC    20PL1'0'
+PQ_MAR   DC    PL2'0'
+BARILO   DC    20PL1'0'
+PQ_BAR   DC    PL2'0'
+POSADAS  DC    20PL1'0'
+PQ_POS   DC    PL2'0'
+SALTA    DC    20PL1'0'
+PQ_SAL   DC    PL2'0'
+CANT_PQ  DS    PL2
+PAQUETES DS    PL2
+RES_MAX  DS    P
+LIMITE   DS    P
+REC_MAX  DS    PL2
+MAX_CH   DS    C
+VACIO    DC    CL17'                 '
+WTBLKR   DC    H'21'
+         DC    H'0'
+RES      DS    CL17
+     END
