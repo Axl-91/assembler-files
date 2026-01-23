@@ -1,4 +1,4 @@
-# Assembler Projects
+# Assembly Projects
 
 ## For conversion.ASM
 
